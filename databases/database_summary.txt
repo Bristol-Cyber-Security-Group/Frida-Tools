@@ -1,0 +1,3 @@
+SharedPreferences used: False
+File I/O used: True
+SQLite used: True

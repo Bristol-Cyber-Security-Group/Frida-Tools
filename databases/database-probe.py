@@ -7,7 +7,15 @@ databases and outputs a summary file of what it found at the end called
 
 import frida
 import sys
+import logging
 
+# Initialize logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(message)s',
+                    handlers=[logging.FileHandler("console.log"),
+                              logging.StreamHandler()])
+
+# Javascript functions to be injected
 js_code = """
 var sharedPrefFlag = false;
 var fileIOFlag = false;
@@ -20,14 +28,14 @@ Java.perform(function () {
 
     editor.putString.overload('java.lang.String', 'java.lang.String').implementation = function (key, value) {
         sharedPrefFlag = true;
-        console.log("SharedPreferences::putString - Key:", key, ", Value:", value);
+        send({'message': "SharedPreferences::putString - Key: " + key + ", Value: " + value});
         return this.putString(key, value);
     };
 
     sharedPreferences.getString.overload('java.lang.String', 'java.lang.String').implementation = function (key, defValue) {
         sharedPrefFlag = true;
         var value = this.getString(key, defValue);
-        console.log("SharedPreferences::getString - Key:", key, ", Value:", value);
+        send({'message': "SharedPreferences::getString - Key: " + key + ", Value: " + value});
         return value;
     };
 });
@@ -40,7 +48,7 @@ Interceptor.attach(Module.findExportByName("libc.so", "fopen"), {
     },
     onLeave: function(retval) {
         if (this.path) {
-            console.log("fopen - Path:", this.path);
+            send({'message': "fopen - Path: " + this.path});
         }
     }
 });
@@ -48,7 +56,7 @@ Interceptor.attach(Module.findExportByName("libc.so", "fopen"), {
 Interceptor.attach(Module.findExportByName("libc.so", "fwrite"), {
     onEnter: function(args) {
         fileIOFlag = true;
-        console.log("fwrite called - Size:", args[2].toInt32());
+        send({'message': "fwrite called - Size: " + args[2].toInt32()});
     }
 });
 
@@ -58,13 +66,13 @@ Java.perform(function() {
     
     sqliteDatabase.execSQL.overload('java.lang.String').implementation = function (sql) {
         sqliteFlag = true;
-        console.log("SQLiteDatabase::execSQL - SQL Query:", sql);
+        send({'message': "SQLiteDatabase::execSQL - SQL Query: " + sql});
         return this.execSQL(sql);
     };
 
     sqliteDatabase.rawQuery.overload('java.lang.String', '[Ljava.lang.String;').implementation = function (sql, selectionArgs) {
         sqliteFlag = true;
-        console.log("SQLiteDatabase::rawQuery - SQL Query:", sql);
+        send({'message': "SQLiteDatabase::rawQuery - SQL Query: " + sql});
         return this.rawQuery(sql, selectionArgs);
     };
 });
@@ -87,17 +95,19 @@ def on_message(message, data):
     if message["type"] == "send":
         payload = message.get("payload", {})
         print(payload)
-        sharedPrefFlag = payload.get("sharedPrefFlag")
-        fileIOFlag = payload.get("fileIOFlag")
-        sqliteFlag = payload.get("sqliteFlag")
-
-    with open("database_summary.txt", "w") as f:
-        f.write(f"SharedPreferences used: {sharedPrefFlag}\n")
-        f.write(f"File I/O used: {fileIOFlag}\n")
-        f.write(f"SQLite used: {sqliteFlag}\n")
-
-    sys.exit(0)
-
+        log_message = payload.get('message')
+        if log_message:
+            logging.info(log_message)
+        else:
+            sharedPrefFlag = payload.get("sharedPrefFlag")
+            fileIOFlag = payload.get("fileIOFlag")
+            sqliteFlag = payload.get("sqliteFlag")
+            with open("database_summary.txt", "w") as f:
+                f.write(f"SharedPreferences used: {sharedPrefFlag}\n")
+                f.write(f"File I/O used: {fileIOFlag}\n")
+                f.write(f"SQLite used: {sqliteFlag}\n")
+            sys.exit(0)
+    
 
 # Select Bose App from processes and attach Frida
 target_process = "com.bose.bosemusic"
