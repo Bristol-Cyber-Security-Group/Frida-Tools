@@ -7,8 +7,10 @@ This repository contains various Frida scripts to analyze and reverse engineer a
 ### Repository Structure
 
 - `./databases/`: This folder contains scripts and example log/summary files from local database experiments.
-  - `database_detection.py`: Python script to detect presence of local databases, creating a summary and log of findings.
-  - `./logs/`: Example logs and summaries created by scripts
+  - `database_detection.py`: Script to detect presence of local databases, creating a summary and log of findings.
+- `./network-sniffing/`: Folder contains scripts for hooking into networking apis used. 
+  - `network-probe.py`: Probes for which networking libraries the application is using to communicate with external endpoints and outputs to commandline.
+  - `open-connection-interceptor.py`: hooks into the java.net.URL library and picks up every time new connections are opened. All connections are output to `networking.log` and after 30 seconds `network_summary.txt` is created containing a summary of which connections were opened and how many times they were accessed.
 - TODO: Update list with new scripts as they're added
 
 ## Prerequisites
