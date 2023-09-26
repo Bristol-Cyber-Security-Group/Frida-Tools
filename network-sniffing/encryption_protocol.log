@@ -1,0 +1,52 @@
+SSL_new called
+SSL Context: 0xb400007359106798
+SSL_new called
+SSL Context: 0xb400007359104ed8
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+SSLContext.init()
+SSL_new called
+SSL Context: 0xb4000073591012d8
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+SSLContext.init()
+SSL_new called
+SSL Context: 0xb400007359107c98
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+SSLContext.init()
+SSL_new called
+SSL Context: 0xb400007359106618
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb400007359105c58
+Supported Protocols: TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb400007359107758
+Supported Protocols: TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb400007359107218
+SSL_new called
+SSL Context: 0xb400007359105958
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb400007359109018
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+SSLContext.init()
+SSL_new called
+SSL Context: 0xb4000073591087d8
+Supported Protocols: TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb40000735910a698
+Supported Protocols: TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb40000735910b7d8
+Supported Protocols: TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb40000735910ce58
+Supported Protocols: TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb400007359113398
+Supported Protocols: TLSv1.2,TLSv1.3
+SSL_new called
+SSL Context: 0xb400007359115798
+Supported Protocols: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
