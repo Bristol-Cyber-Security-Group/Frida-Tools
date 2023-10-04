@@ -5,6 +5,24 @@ all permissions which are granted to the application.
 """
 
 import frida
+import sys
+import os
+import time
+
+try:
+    package = sys.argv[1]
+except:
+    print("Usage: 'python3 <packagename>'")
+
+if package.endswith('.app'):
+    directory = f'logs/{package[:-4]}'
+else:
+    directory = f'logs/{package}'
+
+
+if not os.path.exists(directory):
+    os.makedirs(directory)
+
 
 # Global list to hold all the permissions and their statuses
 permissions_list = []
@@ -20,7 +38,7 @@ def on_message(message, data):
             permissions_list.append(log_message)
         
         # Write to the log file
-        with open('permissions.txt', 'a') as f:
+        with open(f'{directory}/permissions.txt', 'a+') as f:
             f.write(log_message + '\n')
 
 js_code = '''
@@ -144,8 +162,9 @@ Java.perform(function () {
 });
 '''
 
+print(f"Attaching to process {package}")
 device = frida.get_usb_device()
-pid = device.spawn(["com.bose.bosemusic"])
+pid = device.spawn([package])
 session = device.attach(pid)
 script = session.create_script(js_code)
 script.on('message', on_message)
@@ -153,12 +172,11 @@ script.load()
 
 device.resume(pid)
 
-# Wait for user input to terminate the script
-input("Press enter to exit...")
+time.sleep(10)
 
 # Write summary of granted permissions to file
-with open('permissions.txt', 'a') as f:
-    f.write('\n\n--- Summary of granted permissions ---\n')
+with open(f'{directory}/granted-perms.txt', 'w+') as f:
     for line in permissions_list:
-        if "Status: 0" in line: 
-            f.write(line + '\n')
+        if "Status: 0" in line:
+            permission = line.split(",")[0].split(":")[2].strip()
+            f.write(permission + '\n')
