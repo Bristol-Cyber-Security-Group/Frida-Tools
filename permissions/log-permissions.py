@@ -172,7 +172,7 @@ script.load()
 
 device.resume(pid)
 
-time.sleep(10)
+time.sleep(15)
 
 # Write summary of granted permissions to file
 with open(f'{directory}/granted-perms.txt', 'w+') as f:
