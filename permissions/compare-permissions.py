@@ -65,10 +65,14 @@ with open(f'logs/{package}/summary.txt', 'w') as f:
     f.write("Only requested, not granted:\n")
     for perm in only_requested:
         f.write(perm)
+    if not only_requested:
+        f.write("NONE\n")
     
     f.write("\nOnly granted, not requested:\n")
     for perm in only_granted:
         f.write(perm)
+    if not only_granted:
+        f.write("NONE\n")
 
     f.write("\nHighly Sensitive permissions granted:\n")
     for perm in highly_sensitive_granted:
