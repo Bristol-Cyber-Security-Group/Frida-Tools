@@ -9,11 +9,18 @@ import frida
 import sys
 import logging
 
+
+try:
+    PROCESS_NAME = sys.argv[1]
+except:
+    print("Usage: 'python3 <packagename>'")
+    sys.exit(1)
+
+
 # Initialize logging
 logging.basicConfig(level=logging.INFO,
                     format='%(message)s',
-                    handlers=[logging.FileHandler("console.log"),
-                              logging.StreamHandler()])
+                    handlers=[logging.FileHandler("console.log")])
 
 # Javascript functions to be injected
 js_code = """
@@ -77,7 +84,7 @@ Java.perform(function() {
     };
 });
 
-// Send summary flags after 30 seconds
+// Send summary flags after 10 seconds
 Java.perform(function() {
     setTimeout(function() {
         send({
@@ -85,7 +92,7 @@ Java.perform(function() {
             'fileIOFlag': fileIOFlag,
             'sqliteFlag': sqliteFlag
         });
-    }, 30000);
+    }, 10000);
 });
 """
 
@@ -94,7 +101,6 @@ def on_message(message, data):
     global sharedPrefFlag, fileIOFlag, sqliteFlag
     if message["type"] == "send":
         payload = message.get("payload", {})
-        print(payload)
         log_message = payload.get('message')
         if log_message:
             logging.info(log_message)
@@ -106,11 +112,13 @@ def on_message(message, data):
                 f.write(f"SharedPreferences used: {sharedPrefFlag}\n")
                 f.write(f"File I/O used: {fileIOFlag}\n")
                 f.write(f"SQLite used: {sqliteFlag}\n")
-            sys.exit(0)
+            print(f"SharedPreferences used: {sharedPrefFlag}")
+            print(f"File I/O used: {fileIOFlag}")
+            print(f"SQLite used: {sqliteFlag}")
     
 
 # Select Bose App from processes and attach Frida
-target_process = "com.bose.bosemusic"
+target_process = PROCESS_NAME
 device = frida.get_usb_device()
 pid = device.spawn([target_process])
 session = device.attach(pid)
@@ -119,7 +127,9 @@ session = device.attach(pid)
 script = session.create_script(js_code)
 script.on("message", on_message)
 script.load()
-
-# Resume the app and keep the python script running
 device.resume(pid)
-sys.stdin.read()
+
+# Prevent script from terminating immediately
+import time
+time.sleep(15)
+sys.exit(0)

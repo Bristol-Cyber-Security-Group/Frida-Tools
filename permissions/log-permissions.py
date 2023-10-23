@@ -31,7 +31,6 @@ def on_message(message, data):
     global permissions_list
     if message['type'] == 'send':
         log_message = f"[LOG]: {message['payload']}"
-        print(log_message)
         
         # Append permission status to the global list
         if "Permission:" in log_message:
@@ -162,6 +161,7 @@ Java.perform(function () {
 });
 '''
 
+print("Beginning dynamic permissions analysis")
 print(f"Attaching to process {package}")
 device = frida.get_usb_device()
 pid = device.spawn([package])

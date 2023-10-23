@@ -69,11 +69,6 @@ def on_message(message, data):
             info, processed_data = process_data(data)
             if processed_data:
                 if info.get("DATA_ALERTS") is not None:
-                    if info['DATA_ALERTS'] == ['password', 'login', 'token']:
-                        print(f"{payload['STREAM_ID']}-{payload['DIRECTION']}-processed.txt")
-                        print(info['DATA_ALERTS'])
-                        print(processed_data)
-
                     # Create a unique file
                     base_filename = f"{payload['STREAM_ID']}-{payload['DIRECTION']}"
                     
@@ -92,17 +87,6 @@ def on_message(message, data):
             
             write_log(str({**payload, **info}))
 
-        # elif payload['TYPE'] == 'combined-data':
-        #     info, processed_data = process_data(data)
-        #     if processed_data:
-        #         with open(log_folder / f"combined-{payload['STREAM_ID']}-{payload['DIRECTION']}-processed.txt", 'w+') as file:
-        #             file.write(str(processed_data))
-
-        #     write_log(str({**payload, **info}))
-        
-        # else:
-        #     write_log(str(payload))
-
     elif message['type'] == 'error':
         write_log(message['stack'])
     else:
@@ -112,10 +96,17 @@ script.on('message', on_message)
 
 script.load()
 device.resume(pid)
-print("Script loaded")
 
-try:
-    input()
-except KeyboardInterrupt:
-    pass
-print('Exiting...')
+# UNCOMMENT THIS IF YOU WANT USER INPUT TO EXIT SCRIPT
+# print("Script loaded, press any key to exit:")
+
+# try:
+#     input()
+# except KeyboardInterrupt:
+#     pass
+# print('Exiting...')
+
+# Prevent script from terminating immediately
+import time
+time.sleep(10)
+sys.exit(0)

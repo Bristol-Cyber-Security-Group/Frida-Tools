@@ -62,8 +62,14 @@ def on_message(message, data):
         if log_message:
             logging.info(log_message)
 
+try:
+    PROCESS_NAME = sys.argv[1]
+except:
+    print("Usage: 'python3 <packagename>'")
+    sys.exit(1)
+
 # Attach Frida to the target process
-target_process = "com.bose.bosemusic"
+target_process = PROCESS_NAME
 device = frida.get_usb_device()
 pid = device.spawn([target_process])
 session = device.attach(pid)
@@ -72,7 +78,9 @@ session = device.attach(pid)
 script = session.create_script(js_code)
 script.on("message", on_message)
 script.load()
-
-# Resume the app and keep the script running
 device.resume(pid)
-sys.stdin.read()
+
+# Prevent script from terminating immediately
+import time
+time.sleep(10)
+sys.exit(0)

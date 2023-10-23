@@ -4,7 +4,7 @@ import blackboxprotobuf
 
 with open('wordlist.txt') as file:
     WORDLIST = file.read().split()
-    print(WORDLIST)
+    print(f"Keywords to search for: {WORDLIST}")
 
 def detect_http(data, info):
     for method in ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']:
@@ -27,7 +27,7 @@ def decode_as_json(data):
 def decode_as_b64(data):
     try:
         b64_data = base64.b64decode(data, validate=True).decode()
-    except (binascii.Error, UnicodeDecodeError):
+    except:
         return
     return b64_data
 
@@ -35,7 +35,6 @@ def decode_as_protobuf(data):
     try:
         protobuf_data, typedef = blackboxprotobuf.protobuf_to_json(data)
     except:
-        # Decoding can raise many different types of exceptions when the data is invalid
         return
 
     return str(protobuf_data) + '\n' + str(typedef)
@@ -106,7 +105,6 @@ def process_data(data):
         for string in WORDLIST:
             if string in decoded_string:
                 data_alerts.append(string)
-                # print('Found string:', string)
 
     if data_alerts:
         info['DATA_ALERTS'] = data_alerts

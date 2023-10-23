@@ -46,8 +46,6 @@ function processData(byteArray, offset, byteCount, outputStream, direction) {
 }
 
 Java.perform(() => {
-  console.log("Starting javascript");
-  console.log(`Android version: ${Java.androidVersion}`);
 
   const ActivityThread = Java.use('android.app.ActivityThread');
   const processName = ActivityThread.currentProcessName();
@@ -84,5 +82,4 @@ Java.perform(() => {
     return ret;
   }
 
-  console.log("Finished javascript");
 });

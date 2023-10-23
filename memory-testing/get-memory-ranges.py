@@ -6,6 +6,13 @@ attackers could inject malicious code and execute it.
 
 import frida
 import json
+import sys
+
+try:
+    PROCESS_NAME = sys.argv[1]
+except:
+    print("Usage: 'python3 <packagename>'")
+    sys.exit(1)
 
 
 with open("memory_ranges.log", "w") as log_file:
@@ -20,21 +27,19 @@ with open("memory_ranges.log", "w") as log_file:
 
     def on_message(message, data):
         if message['type'] == 'send':
-            print("[*] {0}".format(json.dumps(message['payload'])))
+            # print("[*] {0}".format(json.dumps(message['payload'])))
             log_file.write(json.dumps(message['payload']) + "\n")
-        else:
-            print(message)
 
     # Attach to the target process
     device = frida.get_usb_device()
-    pid = device.spawn(["com.bose.bosemusic"])
+    pid = device.spawn([PROCESS_NAME])
     session = device.attach(pid)
     script = session.create_script(js_code)
     script.on('message', on_message)
     script.load()
-
-    # Resume app's main thread after injecting js
     device.resume(pid)
 
     # Prevent script from terminating immediately
-    input("Press enter to exit...")
+    import time
+    time.sleep(10)
+    sys.exit(0)
