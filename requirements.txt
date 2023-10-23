@@ -1,0 +1,3 @@
+blackboxprotobuf=1.0.1
+frida=16.1.4
+frida-tools=12.3.0

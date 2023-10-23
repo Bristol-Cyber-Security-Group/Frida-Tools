@@ -2,23 +2,16 @@
 
 ## Overview
 
-This repository contains various Frida scripts to analyze and reverse engineer apps. The app which is used for testing in all scripts currently is the bose music app (`com.bose.bosemusic`). Scripts are aimed at intercepting various local storage and I/O operations within the app, and development is ongoing. Future scripts will include memory violation and TLS encryption experiments. 
+This repository contains various Frida scripts to perform static and dynamic privacy analysis on Android applications to produce summary files.
 
-### Repository Structure
-
-- `./databases/`: This folder contains scripts and example log/summary files from local database experiments.
-  - `database_detection.py`: Script to detect presence of local databases, creating a summary and log of findings.
-- `./network-sniffing/`: Folder contains scripts for hooking into networking apis used. 
-  - `network-probe.py`: Probes for which networking libraries the application is using to communicate with external endpoints and outputs to commandline.
-  - `open-connection-interceptor.py`: hooks into the java.net.URL library and picks up every time new connections are opened. All connections are output to `networking.log` and after 30 seconds `network_summary.txt` is created containing a summary of which connections were opened and how many times they were accessed.
-- TODO: Update list with new scripts as they're added
 
 ## Prerequisites
 
-- Python 3.9.13
-- Frida Tools installed (`pip install frida-tools`)
+- Python3
+- Packages in `requirements.txt`
 - Android Emulator (e.g., Android Studio's built-in emulator or Genymotion)
-- ADB Tools
+- ADB Tools and Android build tools in system PATH, e.g.:
+`export PATH=$PATH:/PATH/TO/ANDROID-SDK/build-tools/x.x.x`
 
 ## Setup and Run
 
@@ -47,3 +40,10 @@ This repository contains various Frida scripts to analyze and reverse engineer a
     adb shell /data/local/tmp/frida-server-XX.X-android-arm64 &
     ```
 4. **Test installation:** Run `frida-ps -U` to list processes on the connected emulator. 
+
+### Run tools
+To do a complete run using all tools, use `test-privacy.sh`. Ensure emulator is running with frida server. 
+
+Usage: `./test-privacy.sh <package-name> <path-to-apk>`
+
+Example usage: `./test-privacy.sh com.bose.bosemusic ../emulator-setup/BoseMusic_8.0.5_Apkpure.apk`
