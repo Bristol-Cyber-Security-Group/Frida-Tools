@@ -103,7 +103,8 @@ def create_pdf(package_name, outdir):
 
     exp_activities = count_lines(f"{outdir}/exported-activities.txt")
     pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, txt=f"Found {exp_activities} exported activities. This can pose a security risk if the activity contains sensitive information or functionality that the application only should access. See exported-activities.txt for full list.")
+    if exp_activities > 0:
+        pdf.multi_cell(0, 10, txt=f"Found {exp_activities} exported activities. This can pose a security risk if the activity contains sensitive information or functionality that the application only should access. See exported-activities.txt for full list.")
 
     # PERMISSIONS
     pdf.set_font("Arial", 'B', size=12)
@@ -132,8 +133,10 @@ def create_pdf(package_name, outdir):
     keywords, messages = count_intercepted_keywords(f"{outdir}/TLSintercept")
     protocols = find_insecure_protocols(f"{outdir}/encryption_protocol.log")
     pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, txt=f"Intercepted {messages} messages containing flagged keywords, including:\n {keywords}")
-    pdf.multi_cell(0, 10, txt=f"App supports insecure protocols: {str(protocols)}. See encryption_protocol.log for more info.")
+    if messages > 0:
+        pdf.multi_cell(0, 10, txt=f"Intercepted {messages} messages containing flagged keywords, including:\n {keywords}")
+    if protocols:
+        pdf.multi_cell(0, 10, txt=f"App supports insecure protocols: {str(protocols)}. See encryption_protocol.log for more info.")
 
     # MEMORY ANALYSIS
     pdf.set_font("Arial", 'B', size=12)
@@ -141,7 +144,8 @@ def create_pdf(package_name, outdir):
 
     mem_ranges = count_lines(f"{outdir}/memory_ranges.log")
     pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, txt=f"App uses {mem_ranges} memory locations with potentially insecure rwx privileges. Check memory_ranges.log to analyse each location.")
+    if mem_ranges > 0:
+        pdf.multi_cell(0, 10, txt=f"App uses {mem_ranges} memory locations with potentially insecure rwx privileges. Check memory_ranges.log to analyse each location.")
 
     # DATABASE ANALYSIS
     pdf.set_font("Arial", 'B', size=12)
@@ -149,7 +153,8 @@ def create_pdf(package_name, outdir):
 
     dbs = parse_database_summary(f"{outdir}/database_summary.txt")
     pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, txt=f"Detected the use of: {dbs}", ln=True, align='L')
+    if dbs:
+        pdf.cell(0, 10, txt=f"Detected the use of: {dbs}", ln=True, align='L')
     pdf.cell(0, 10, txt="To manually check interactions for the storage of private data see db.log.", ln=True, align='L')
 
 
