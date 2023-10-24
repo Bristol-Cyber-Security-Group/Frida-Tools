@@ -9,7 +9,17 @@ fi
 package="$1"
 filename=${package%.app}
 apk="$2"
-outdir="/Users/lucy/Documents/work/rephrain/Frida-Tools/logs/$filename"
+outdir="$(pwd)/logs/$filename"
+mkdir -p "$outdir"
+
+# STATIC MANIFEST ANALYSIS
+printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+echo "Beginning static manifest analysis"
+printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+
+cd manifest-analysis
+python check-activities.py ../$apk $outdir
+cd ..
 
 # PERMISSIONS ANALYSIS
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
@@ -61,3 +71,7 @@ printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 cd databases
 python database-probe.py $package $outdir
 cd ..
+
+
+# PRODUCE PDF REPORT
+python produce-pdf.py $package $outdir

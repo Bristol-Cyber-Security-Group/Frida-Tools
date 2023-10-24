@@ -24,7 +24,7 @@ def count_intercepted_keywords(directory):
                         keywords[word] += 1
     return keywords, messages
 
-def count_mem_ranges(file_path):
+def count_lines(file_path):
     with open(file_path, 'r') as file:
         line_count = sum(1 for line in file)
     return line_count
@@ -97,6 +97,14 @@ def create_pdf(package_name, outdir):
     pdf.cell(0, 10, "", ln=True)
 
 
+    # MANIFEST ANALYSIS
+    pdf.set_font("Arial", 'B', size=12)
+    pdf.cell(0, 10, txt="Manifest Analysis", ln=True, align='L')
+
+    exp_activities = count_lines(f"{outdir}/exported-activities.txt")
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, txt=f"Found {exp_activities} exported activities. This can pose a security risk if the activity contains sensitive information or functionality that the application only should access. See exported-activities.txt for full list.")
+
     # PERMISSIONS
     pdf.set_font("Arial", 'B', size=12)
     pdf.cell(0, 10, txt="Permissions Analysis", ln=True, align='L')
@@ -131,7 +139,7 @@ def create_pdf(package_name, outdir):
     pdf.set_font("Arial", 'B', size=12)
     pdf.cell(0, 10, txt="Memory Analysis", ln=True, align='L')
 
-    mem_ranges = count_mem_ranges(f"{outdir}/memory_ranges.log")
+    mem_ranges = count_lines(f"{outdir}/memory_ranges.log")
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, txt=f"App uses {mem_ranges} memory locations with potentially insecure rwx privileges. Check memory_ranges.log to analyse each location.")
 
