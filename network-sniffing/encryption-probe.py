@@ -10,11 +10,6 @@ import frida
 import sys
 import logging
 
-# Initialize logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(message)s',
-                    handlers=[logging.FileHandler("encryption_protocol.log"),
-                              logging.StreamHandler()])
 
 # JavaScript code to hook into SSL/TLS methods
 js_code = """
@@ -64,9 +59,15 @@ def on_message(message, data):
 
 try:
     PROCESS_NAME = sys.argv[1]
+    OUT_DIR = sys.argv[2]
 except:
-    print("Usage: 'python3 <packagename>'")
+    print("Usage: 'python encryption-probe.py <packagename> <outdir>'")
     sys.exit(1)
+
+# Initialize logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(message)s',
+                    handlers=[logging.FileHandler(f"{OUT_DIR}/encryption_protocol.log")])
 
 # Attach Frida to the target process
 target_process = PROCESS_NAME

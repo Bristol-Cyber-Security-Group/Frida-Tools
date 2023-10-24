@@ -27,13 +27,13 @@ def extract_apis(package_name, output_dir, api_list_file):
     os.system(cmd)
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python3 api_analysis.py <package_name> <apk_path>")
+    if len(sys.argv) != 4:
+        print("Usage: python api_analysis.py <package_name> <apk_path> <outdir>")
         sys.exit(1)
 
     apk_path = sys.argv[2]
-    output_dir = f"{sys.argv[1]}/decompile"
-    api_list_file = f"{sys.argv[1]}/apis.txt"
+    output_dir = f"{sys.argv[3]}/decompile"
+    api_list_file = f"{sys.argv[3]}/apis.txt"
 
     decompile_apk(apk_path, output_dir)
     extract_apis(sys.argv[1], output_dir, api_list_file)

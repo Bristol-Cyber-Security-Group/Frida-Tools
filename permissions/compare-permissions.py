@@ -1,6 +1,11 @@
 import sys
 
-package = sys.argv[1]
+try:
+    package = sys.argv[1]
+    outdir = sys.argv[2]
+except:
+    print("Usage: 'python compare-permissions.py <packagename> <outdir>'")
+    sys.exit(1)
 
 # Define sensitive permissions
 highly_sensitive_permissions = {
@@ -43,11 +48,11 @@ potentially_sensitive_permissions = {
 
 
 # Read content from granted-perms.txt
-with open(f'logs/{package}/granted-perms.txt', 'r') as f:
+with open(f'{outdir}/granted-perms.txt', 'r') as f:
     granted_perms = set(f.readlines())
 
 # Read content from requested-perms.txt
-with open(f'logs/{package}/requested-perms.txt', 'r') as f:
+with open(f'{outdir}/requested-perms.txt', 'r') as f:
     requested_perms = set(f.readlines())
 
 # Find differences
@@ -61,7 +66,7 @@ potentially_sensitive_granted = set(perm for perm in granted_perms if perm.strip
 
 
 # Write to summary.txt
-with open(f'logs/{package}/summary.txt', 'w') as f:
+with open(f'{outdir}/permissions-summary.txt', 'w') as f:
     f.write("Only requested, not granted:\n")
     for perm in only_requested:
         f.write(perm)

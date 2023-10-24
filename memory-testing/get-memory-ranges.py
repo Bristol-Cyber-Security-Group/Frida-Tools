@@ -10,12 +10,13 @@ import sys
 
 try:
     PROCESS_NAME = sys.argv[1]
+    OUT_DIR = sys.argv[2]
 except:
-    print("Usage: 'python3 <packagename>'")
+    print("Usage: 'python get-memory-ranges.py <packagename> <outdir>'")
     sys.exit(1)
 
 
-with open("memory_ranges.log", "w") as log_file:
+with open(f"{OUT_DIR}/memory_ranges.log", "w") as log_file:
 
     # Script to inject into application
     js_code = """

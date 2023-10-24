@@ -12,15 +12,16 @@ import logging
 
 try:
     PROCESS_NAME = sys.argv[1]
+    OUT_DIR = sys.argv[2]
 except:
-    print("Usage: 'python3 <packagename>'")
+    print("Usage: 'python database-probe.py <packagename> <outdir>'")
     sys.exit(1)
 
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO,
                     format='%(message)s',
-                    handlers=[logging.FileHandler("console.log")])
+                    handlers=[logging.FileHandler(f"{OUT_DIR}/db.log")])
 
 # Javascript functions to be injected
 js_code = """
@@ -108,7 +109,7 @@ def on_message(message, data):
             sharedPrefFlag = payload.get("sharedPrefFlag")
             fileIOFlag = payload.get("fileIOFlag")
             sqliteFlag = payload.get("sqliteFlag")
-            with open("database_summary.txt", "w") as f:
+            with open(f"{OUT_DIR}/database_summary.txt", "w") as f:
                 f.write(f"SharedPreferences used: {sharedPrefFlag}\n")
                 f.write(f"File I/O used: {fileIOFlag}\n")
                 f.write(f"SQLite used: {sqliteFlag}\n")

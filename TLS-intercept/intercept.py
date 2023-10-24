@@ -1,9 +1,9 @@
 """
-python intercept.py <process>
+python intercept.py <process> <outdir>
 
 Example usage:
-python intercept.py signal
-python intercept.py telegram
+python intercept.py signal ./logs/signal
+python intercept.py telegram ./logs/telegram
 """
 
 import os
@@ -14,7 +14,13 @@ import frida
 
 from process_data import process_data
 
-PROCESS_NAME = sys.argv[1].lower() if len(sys.argv) > 1 else print("invalid process name")
+try:
+    PROCESS_NAME = sys.argv[1]
+    outdir = sys.argv[2]
+except:
+    print("Usage: 'python intercept.py <packagename> <outdir>'")
+    sys.exit(1)
+
 
 processes = {
     'signal': 'org.thoughtcrime.securesms',
@@ -26,14 +32,14 @@ processes = {
     'viber': 'com.viber.voip'
 }
 
-log_folder = Path('logs') / PROCESS_NAME / f"test-{datetime.datetime.now().isoformat()}"
+log_folder = f"{outdir}/test-{datetime.datetime.now().isoformat()}"
 os.makedirs(log_folder)
 
 if PROCESS_NAME in processes.keys():
     PROCESS_NAME = processes[PROCESS_NAME]
 
-log_file_name = datetime.datetime.now().isoformat() + '-timeline.log'
-log_file = log_folder / log_file_name
+log_file_name = 'timeline.log'
+log_file = f"{log_folder}/{log_file_name}"
 with open(log_file, 'w') as file:
     file.write(f'{PROCESS_NAME}, \n')
 
@@ -73,11 +79,11 @@ def on_message(message, data):
                     base_filename = f"{payload['STREAM_ID']}-{payload['DIRECTION']}"
                     
                     counter = file_counters.get(base_filename, 1)
-                    filename = log_folder / f"{base_filename}_{counter}.txt"
+                    filename = f"{log_folder}/{base_filename}_{counter}.txt"
 
                     while Path(filename).exists():
                         counter += 1
-                        filename = log_folder / f"{base_filename}_{counter}.txt"
+                        filename = f"{log_folder}/{base_filename}_{counter}.txt"
 
                     file_counters[base_filename] = counter + 1
 

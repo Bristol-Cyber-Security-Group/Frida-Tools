@@ -11,18 +11,15 @@ import time
 
 try:
     package = sys.argv[1]
+    outdir = sys.argv[2]
 except:
-    print("Usage: 'python3 <packagename>'")
+    print("Usage: 'python log-permissions.py <packagename> <outdir>'")
+    sys.exit(1)
 
-if package.endswith('.app'):
-    directory = f'logs/{package[:-4]}'
-else:
-    directory = f'logs/{package}'
-
+directory = f'{outdir}'
 
 if not os.path.exists(directory):
     os.makedirs(directory)
-
 
 # Global list to hold all the permissions and their statuses
 permissions_list = []
