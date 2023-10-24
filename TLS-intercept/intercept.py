@@ -32,7 +32,7 @@ processes = {
     'viber': 'com.viber.voip'
 }
 
-log_folder = f"{outdir}/test-{datetime.datetime.now().isoformat()}"
+log_folder = f"{outdir}/TLSintercept"
 os.makedirs(log_folder)
 
 if PROCESS_NAME in processes.keys():
