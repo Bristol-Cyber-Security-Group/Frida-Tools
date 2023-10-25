@@ -19,6 +19,7 @@ printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd manifest-analysis
 python check-activities.py ../$apk $outdir
+python check-version.py ../$apk $outdir
 cd ..
 
 # PERMISSIONS ANALYSIS

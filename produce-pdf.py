@@ -2,6 +2,20 @@ import sys
 from fpdf import FPDF
 import re
 import os
+import json
+
+def get_min_sdk(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            file_content = file.read()
+            json_content = file_content.replace("'", '"')
+            data = json.loads(json_content)
+            min_sdk = data.get('minSdkVersion')
+            print(min_sdk)
+            return min_sdk
+    except Exception as e:
+        print(f"Could not find minSdkVersion: {e}")
+    return None
 
 def count_intercepted_keywords(directory):
     keywords = {}
@@ -101,8 +115,13 @@ def create_pdf(package_name, outdir):
     pdf.set_font("Arial", 'B', size=12)
     pdf.cell(0, 10, txt="Manifest Analysis", ln=True, align='L')
 
+    min_sdk = get_min_sdk(f"{outdir}/version-check.txt")
+
     exp_activities = count_lines(f"{outdir}/exported-activities.txt")
     pdf.set_font("Arial", size=12)
+    if min_sdk:
+        if min_sdk < 26:
+            pdf.multi_cell(0, 10, txt=f"App can be installed on vulnerable Android sdk version {min_sdk}. Support for API >=26 is preferable for security updates.")
     if exp_activities > 0:
         pdf.multi_cell(0, 10, txt=f"Found {exp_activities} exported activities. This can pose a security risk if the activity contains sensitive information or functionality that the application only should access. See exported-activities.txt for full list.")
 
