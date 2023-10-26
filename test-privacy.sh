@@ -71,6 +71,10 @@ printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd databases
 python database-probe.py $package $outdir
+if grep -q "File I/O used: True" "$outdir/database_summary.txt"; then
+    echo "File I/O usage detected. Running searchFiles.py..."
+    python dump-files.py $package $outdir
+fi
 cd ..
 
 

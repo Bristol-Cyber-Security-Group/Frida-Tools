@@ -4,6 +4,7 @@ import re
 import os
 import json
 
+
 def get_min_sdk(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -176,6 +177,9 @@ def create_pdf(package_name, outdir):
         pdf.cell(0, 10, txt=f"Detected the use of: {dbs}", ln=True, align='L')
     pdf.cell(0, 10, txt="To manually check interactions for the storage of private data see db.log.", ln=True, align='L')
 
+    num_files = count_lines(f"{outdir}/interesting-files.txt")
+    if num_files > 0:
+        pdf.multi_cell(0, 10, txt=f"Found {num_files} files containing keywords of interest. See interesting-files.txt for more info.")
 
     # Save
     out_path = f"{outdir}/privacy-summary.pdf"
