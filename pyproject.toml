@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "fridaTools"
+version = "0.1.0"
+description = ""
+authors = ["Lucy Randewich <lrandewich@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+frida = "16.1.4"
+frida-tools = "12.3.0"
+blackboxprotobuf = "1.0.1"
+fpdf = "1.7.2"
+pyyaml = "6.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

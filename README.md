@@ -5,15 +5,7 @@
 This repository contains various Frida scripts to perform static and dynamic privacy analysis on Android applications to produce summary files.
 
 
-## Prerequisites
-
-- Python3
-- Packages in `requirements.txt`
-- Android Emulator (e.g., Android Studio's built-in emulator or Genymotion)
-- ADB Tools and Android build tools in system PATH, e.g.:
-`export PATH=$PATH:/PATH/TO/ANDROID-SDK/build-tools/x.x.x`
-
-## Setup and Run
+## Setup
 
 ### AVD Install and Setup
 
@@ -41,9 +33,16 @@ This repository contains various Frida scripts to perform static and dynamic pri
     ```
 4. **Test installation:** Run `frida-ps -U` to list processes on the connected emulator. 
 
-### Run tools
-To do a complete run using all tools, use `test-privacy.sh`. Ensure emulator is running with frida server. 
+## Run
 
-Usage: `./test-privacy.sh <package-name> <path-to-apk>`
+### Requirements:
+- Emulator is running with Frida server started as setup above.
+- Android platform tools and build tools are in PATH (the commands `aapt` and `adb` are required).
+- This repository provides a requirements.txt for installing requirements via pip, but the recommended dependency management system is Poetry. Run `poetry install` in the root repository to install dependencies, then `poetry shell` to activate the environment.
 
-Example usage: `./test-privacy.sh com.bose.bosemusic ../emulator-setup/BoseMusic_8.0.5_Apkpure.apk`
+### Running the tools:
+To do a complete run using all tools, use `test-privacy.sh`. 
+
+Usage: `./test-privacy.sh <package-name> <path-to-apk>`.
+
+Example usage: `./test-privacy.sh com.bose.bosemusic ../apkfiles/BoseMusic_8.0.5_Apkpure.apk`.
