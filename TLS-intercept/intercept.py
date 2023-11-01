@@ -47,7 +47,8 @@ device = frida.get_usb_device()
 pid = device.spawn([PROCESS_NAME])
 session = device.attach(pid)
 
-with open("script.js") as f:
+script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script.js')
+with open(script_path) as f:
     script = session.create_script(f.read())
 
 def decode(bytes):

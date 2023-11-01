@@ -1,8 +1,11 @@
 import json
 import base64, binascii
 import blackboxprotobuf
+import os
 
-with open('wordlist.txt') as file:
+wordlist_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wordlist.txt')
+
+with open(wordlist_path) as file:
     WORDLIST = file.read().split()
     print(f"Keywords to search for: {WORDLIST}")
 
