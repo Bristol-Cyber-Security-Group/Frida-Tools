@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set poetry environment
+PYTHON="/path/to/poetry/env/bin/python"
+
 # Determine the directory of the script
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -21,8 +24,8 @@ echo "Beginning static manifest analysis"
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd "$DIR/manifest-analysis"
-python check-activities.py "$DIR/$apk" "$outdir"
-python check-version.py "$DIR/$apk" "$outdir"
+$PYTHON check-activities.py "$DIR/$apk" "$outdir"
+$PYTHON check-version.py "$DIR/$apk" "$outdir"
 cd "$DIR"
 
 # PERMISSIONS ANALYSIS
@@ -31,11 +34,11 @@ echo "Beginning permissions analysis"
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd "$DIR/permissions"
-python log-permissions.py "$package" "$outdir" &
+$PYTHON log-permissions.py "$package" "$outdir" &
 wait $!
 echo "Beginning static permissions analysis"
 aapt dump xmltree "$DIR/$apk" AndroidManifest.xml | grep 'android.permission.' | awk -F\" '{print $2}' | sort > "$outdir/requested-perms.txt"
-python compare-permissions.py "$package" "$outdir"
+$PYTHON compare-permissions.py "$package" "$outdir"
 cd "$DIR"
 
 # API ANALYSIS
@@ -44,7 +47,7 @@ echo "Beginning API analysis"
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd "$DIR/api-tracing"
-python list-apis.py "$package" "$DIR/$apk" "$outdir"
+$PYTHON list-apis.py "$package" "$DIR/$apk" "$outdir"
 cd "$DIR"
 
 # TLS INTERCEPT AND NETWORK SNIFFING
@@ -53,9 +56,9 @@ echo "Beginning TLS intercept"
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd "$DIR/TLS-intercept"
-python intercept.py "$package" "$outdir"
+$PYTHON intercept.py "$package" "$outdir"
 cd "$DIR/network-sniffing"
-python encryption-probe.py "$package" "$outdir"
+$PYTHON encryption-probe.py "$package" "$outdir"
 cd "$DIR"
 
 # MEMORY ANALYSIS
@@ -64,7 +67,7 @@ echo "Beginning memory analysis"
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd "$DIR/memory-testing"
-python get-memory-ranges.py "$package" "$outdir"
+$PYTHON get-memory-ranges.py "$package" "$outdir"
 cd "$DIR"
 
 # DATABASE ANALYSIS
@@ -73,12 +76,12 @@ echo "Beginning database analysis"
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd "$DIR/databases"
-python database-probe.py "$package" "$outdir"
+$PYTHON database-probe.py "$package" "$outdir"
 if grep -q "File I/O used: True" "$outdir/database_summary.txt"; then
     echo "File I/O usage detected. Running searchFiles.py..."
-    python dump-files.py "$package" "$outdir"
+    $PYTHON dump-files.py "$package" "$outdir"
 fi
 cd "$DIR"
 
 # PRODUCE PDF REPORT
-python produce-pdf.py "$package" "$outdir"
+$PYTHON produce-pdf.py "$package" "$outdir"
