@@ -24,8 +24,8 @@ echo "Beginning static manifest analysis"
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd "$DIR/manifest-analysis"
-$PYTHON check-activities.py "$DIR/$apk" "$outdir"
-$PYTHON check-version.py "$DIR/$apk" "$outdir"
+$PYTHON check-activities.py "$apk" "$outdir"
+$PYTHON check-version.py "$apk" "$outdir"
 cd "$DIR"
 
 # PERMISSIONS ANALYSIS
@@ -37,7 +37,7 @@ cd "$DIR/permissions"
 $PYTHON log-permissions.py "$package" "$outdir" &
 wait $!
 echo "Beginning static permissions analysis"
-aapt dump xmltree "$DIR/$apk" AndroidManifest.xml | grep 'android.permission.' | awk -F\" '{print $2}' | sort > "$outdir/requested-perms.txt"
+aapt dump xmltree "$apk" AndroidManifest.xml | grep 'android.permission.' | awk -F\" '{print $2}' | sort > "$outdir/requested-perms.txt"
 $PYTHON compare-permissions.py "$package" "$outdir"
 cd "$DIR"
 
@@ -47,7 +47,7 @@ echo "Beginning API analysis"
 printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 
 cd "$DIR/api-tracing"
-$PYTHON list-apis.py "$package" "$DIR/$apk" "$outdir"
+$PYTHON list-apis.py "$package" "$apk" "$outdir"
 cd "$DIR"
 
 # TLS INTERCEPT AND NETWORK SNIFFING
