@@ -12,5 +12,6 @@ do
     filename=${package%.app}
     aapt dump xmltree $apk AndroidManifest.xml | grep 'android.permission.' | awk -F\" '{print $2}' | sort > logs/$filename/requested-perms.txt
     python3 compare-permissions.py $filename
+    adb uninstall $package
 done
 
