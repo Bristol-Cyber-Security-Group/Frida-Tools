@@ -7,7 +7,7 @@ python intercept.py telegram ./logs/telegram
 """
 
 import os
-import datetime
+import time, datetime
 import sys
 from pathlib import Path
 import csv
@@ -25,41 +25,6 @@ def create_csv_file(file_path):
     else:
         print("Messages csv already exists at this location, exiting.")
         sys.exit(1)
-
-try:
-    PROCESS_NAME = sys.argv[1]
-    outdir = sys.argv[2]
-except:
-    print("Usage: 'python intercept.py <packagename> <outdir>'")
-    sys.exit(1)
-
-# Create log path and initiate timeline.log and csv file
-log_folder = f"{outdir}/TLSintercept"
-os.makedirs(log_folder)
-log_file_name = 'timeline.log'
-log_file = f"{log_folder}/{log_file_name}"
-with open(log_file, 'w') as file:
-    file.write(f'{PROCESS_NAME}, \n')
-csv_path = f"{outdir}/messages.csv"
-create_csv_file(csv_path)
-
-
-# Connect to process with Frida and start js script
-device = frida.get_usb_device()
-pid = device.spawn([PROCESS_NAME])
-session = device.attach(pid)
-script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script.js')
-with open(script_path) as f:
-    script = session.create_script(f.read())
-
-def decode(bytes):
-    print("=" * 100)
-    print(f"{len(bytes)} bytes")
-    s = ""
-    for byte in bytes:
-        s += chr(byte)
-    print(s)
-    print("=" * 100)
 
 def write_log(message, time=None):
     if not time:
@@ -91,6 +56,32 @@ def on_message(message, data):
     else:
         write_log(str(message))
 
+# Parse args
+try:
+    PROCESS_NAME = sys.argv[1]
+    outdir = sys.argv[2]
+except:
+    print("Usage: 'python intercept.py <packagename> <outdir>'")
+    sys.exit(1)
+
+# Create log path and initiate timeline.log and csv file
+log_folder = f"{outdir}/TLSintercept"
+os.makedirs(log_folder)
+log_file_name = 'timeline.log'
+log_file = f"{log_folder}/{log_file_name}"
+with open(log_file, 'w') as file:
+    file.write(f'{PROCESS_NAME}, \n')
+csv_path = f"{outdir}/messages.csv"
+create_csv_file(csv_path)
+
+# Connect to process with Frida and start js script
+device = frida.get_usb_device()
+pid = device.spawn([PROCESS_NAME])
+session = device.attach(pid)
+script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script.js')
+with open(script_path) as f:
+    script = session.create_script(f.read())
+
 script.on('message', on_message)
 
 script.load()
@@ -106,7 +97,6 @@ device.resume(pid)
 # print('Exiting...')
 
 # Prevent script from terminating immediately
-import time
 time.sleep(10)
 print(f"Intercepted {ids['message_id']} messages, exiting.")
 sys.exit(0)
