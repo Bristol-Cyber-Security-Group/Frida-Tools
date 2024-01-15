@@ -10,9 +10,21 @@ import os
 import datetime
 import sys
 from pathlib import Path
+import csv
 import frida
 
 from process_data import process_data
+
+# Create csv file for storing intercepted messages
+def create_csv_file(file_path):
+    headers = ["MESSAGE_ID", "TIMESTAMP", "MESSAGE"]
+    if not Path(file_path).exists():
+        with open(file_path, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(headers)
+    else:
+        print("Messages csv already exists at this location, exiting.")
+        sys.exit(1)
 
 try:
     PROCESS_NAME = sys.argv[1]
@@ -21,13 +33,16 @@ except:
     print("Usage: 'python intercept.py <packagename> <outdir>'")
     sys.exit(1)
 
-# Create log path and initiate timeline.log file
+# Create log path and initiate timeline.log and csv file
 log_folder = f"{outdir}/TLSintercept"
 os.makedirs(log_folder)
 log_file_name = 'timeline.log'
 log_file = f"{log_folder}/{log_file_name}"
 with open(log_file, 'w') as file:
     file.write(f'{PROCESS_NAME}, \n')
+csv_path = f"{outdir}/messages.csv"
+create_csv_file(csv_path)
+
 
 # Connect to process with Frida and start js script
 device = frida.get_usb_device()
@@ -52,7 +67,8 @@ def write_log(message, time=None):
     with open(log_file, 'a') as file:
         file.write('-' * 120 + '\n' + time + '\n' + message + '\n')
 
-file_counters = {}
+
+ids = {'message_id': 1}
 
 def on_message(message, data):
     if message['type'] == 'send':
@@ -60,20 +76,13 @@ def on_message(message, data):
         if payload['TYPE'] == 'data':
             info, processed_data = process_data(data)
             if processed_data:
-                # Create a unique file
-                base_filename = f"{payload['STREAM_ID']}-{payload['DIRECTION']}"
-                
-                counter = file_counters.get(base_filename, 1)
-                filename = f"{log_folder}/{base_filename}_{counter}.txt"
+                timestamp = datetime.datetime.now().isoformat()
+                record = [ids['message_id'], timestamp, str(processed_data)]
+                with open(csv_path, 'a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(record)
 
-                while Path(filename).exists():
-                    counter += 1
-                    filename = f"{log_folder}/{base_filename}_{counter}.txt"
-
-                file_counters[base_filename] = counter + 1
-
-                with open(filename, 'w+') as file:
-                    file.write(str(processed_data))
+                ids['message_id'] += 1
             
             write_log(str({**payload, **info}))
 
