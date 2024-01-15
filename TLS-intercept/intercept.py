@@ -21,32 +21,18 @@ except:
     print("Usage: 'python intercept.py <packagename> <outdir>'")
     sys.exit(1)
 
-
-processes = {
-    'signal': 'org.thoughtcrime.securesms',
-    'whatsapp': 'com.whatsapp',
-    'messenger': 'com.facebook.orca',
-    'telegram': 'org.telegram.messenger.web',
-    'wire': 'com.wire',
-    'element': 'im.vector.app',
-    'viber': 'com.viber.voip'
-}
-
+# Create log path and initiate timeline.log file
 log_folder = f"{outdir}/TLSintercept"
 os.makedirs(log_folder)
-
-if PROCESS_NAME in processes.keys():
-    PROCESS_NAME = processes[PROCESS_NAME]
-
 log_file_name = 'timeline.log'
 log_file = f"{log_folder}/{log_file_name}"
 with open(log_file, 'w') as file:
     file.write(f'{PROCESS_NAME}, \n')
 
+# Connect to process with Frida and start js script
 device = frida.get_usb_device()
 pid = device.spawn([PROCESS_NAME])
 session = device.attach(pid)
-
 script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script.js')
 with open(script_path) as f:
     script = session.create_script(f.read())
@@ -65,7 +51,6 @@ def write_log(message, time=None):
         time = datetime.datetime.now().isoformat()
     with open(log_file, 'a') as file:
         file.write('-' * 120 + '\n' + time + '\n' + message + '\n')
-
 
 file_counters = {}
 
