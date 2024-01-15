@@ -75,22 +75,21 @@ def on_message(message, data):
         if payload['TYPE'] == 'data':
             info, processed_data = process_data(data)
             if processed_data:
-                if info.get("DATA_ALERTS") is not None:
-                    # Create a unique file
-                    base_filename = f"{payload['STREAM_ID']}-{payload['DIRECTION']}"
-                    
-                    counter = file_counters.get(base_filename, 1)
+                # Create a unique file
+                base_filename = f"{payload['STREAM_ID']}-{payload['DIRECTION']}"
+                
+                counter = file_counters.get(base_filename, 1)
+                filename = f"{log_folder}/{base_filename}_{counter}.txt"
+
+                while Path(filename).exists():
+                    counter += 1
                     filename = f"{log_folder}/{base_filename}_{counter}.txt"
 
-                    while Path(filename).exists():
-                        counter += 1
-                        filename = f"{log_folder}/{base_filename}_{counter}.txt"
+                file_counters[base_filename] = counter + 1
 
-                    file_counters[base_filename] = counter + 1
-
-                    with open(filename, 'w+') as file:
-                        file.write(str(info['DATA_ALERTS']) + "\n")
-                        file.write(str(processed_data))
+                with open(filename, 'w+') as file:
+                    file.write(str(info['DATA_ALERTS']) + "\n")
+                    file.write(str(processed_data))
             
             write_log(str({**payload, **info}))
 
