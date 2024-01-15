@@ -71,7 +71,7 @@ log_file_name = 'timeline.log'
 log_file = f"{log_folder}/{log_file_name}"
 with open(log_file, 'w') as file:
     file.write(f'{PROCESS_NAME}, \n')
-csv_path = f"{outdir}/messages.csv"
+csv_path = f"{log_folder}/messages.csv"
 create_csv_file(csv_path)
 
 # Connect to process with Frida and start js script
@@ -98,5 +98,5 @@ device.resume(pid)
 
 # Prevent script from terminating immediately
 time.sleep(10)
-print(f"Intercepted {ids['message_id']} messages, exiting.")
+print(f"Intercepted {ids['message_id'] - 1} messages, exiting.")
 sys.exit(0)

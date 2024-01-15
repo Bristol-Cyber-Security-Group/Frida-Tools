@@ -3,11 +3,6 @@ import base64, binascii
 import blackboxprotobuf
 import os
 
-wordlist_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wordlist.txt')
-
-with open(wordlist_path) as file:
-    WORDLIST = file.read().split()
-    print(f"Keywords to search for: {WORDLIST}")
 
 def detect_http(data, info):
     for method in ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']:
@@ -101,14 +96,4 @@ def process_data(data):
 
     info['COUNT'] = count
 
-    data_alerts = []
-    if decoded_data:
-        # Search for interesting strings
-        decoded_string = str(decoded_data).lower()
-        for string in WORDLIST:
-            if string in decoded_string:
-                data_alerts.append(string)
-
-    if data_alerts:
-        info['DATA_ALERTS'] = data_alerts
     return info, decoded_data
