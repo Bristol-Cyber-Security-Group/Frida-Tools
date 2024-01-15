@@ -73,7 +73,6 @@ def on_message(message, data):
                 file_counters[base_filename] = counter + 1
 
                 with open(filename, 'w+') as file:
-                    file.write(str(info['DATA_ALERTS']) + "\n")
                     file.write(str(processed_data))
             
             write_log(str({**payload, **info}))
