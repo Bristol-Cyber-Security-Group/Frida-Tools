@@ -40,9 +40,18 @@ This repository contains various Frida scripts to perform static and dynamic pri
 - Android platform tools and build tools are in PATH (the commands `aapt` and `adb` are required).
 - This repository provides a requirements.txt for installing requirements via pip, but the recommended dependency management system is Poetry. Run `poetry install` in the root repository to install dependencies, then `poetry shell` to activate the environment.
 
-### Running the tools:
+### Running all tools:
 To do a complete run using all tools, use `test-privacy.sh`. 
 
 Usage: `./test-privacy.sh <package-name> <path-to-apk>`.
 
 Example usage: `./test-privacy.sh com.bose.bosemusic ../apkfiles/BoseMusic_8.0.5_Apkpure.apk`.
+
+### TLS intercept:
+One of the most noteworthy scripts from the suite is the `TLS-intercept` tool. This hooks into the Android `conscrypt` function to intercept TLS messages being sent and received by the application in real time. 
+
+Usage: `python intercept.py <package-name> <out-dir>`
+
+Example usage: `python intercept.py com.bose.bosemusic ./logs/bose`
+
+Output: The tool runs for 10 seconds by default (can be switched to terminate by user input by uncommenting relevant code in `intercept.py`) and produces `messages.csv`, which contains all intercepted messages in the format [MESSAGE_ID, TIMESTAMP, MESSAGE]. Users can then query the database to find messages of interest, for example those containing sensitive information.
