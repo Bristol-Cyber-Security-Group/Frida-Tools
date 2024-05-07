@@ -97,6 +97,6 @@ device.resume(pid)
 # print('Exiting...')
 
 # Prevent script from terminating immediately
-time.sleep(10)
+time.sleep(20)
 print(f"Intercepted {ids['message_id'] - 1} messages, exiting.")
 sys.exit(0)
