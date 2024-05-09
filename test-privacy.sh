@@ -7,15 +7,15 @@ PYTHON="/path/to/poetry/env/bin/python"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Usage
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <package> <path-to-apk>"
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <package> <path-to-apk> <output-dir>"
     exit 1
 fi
 
 package="$1"
 filename=${package%.app}
 apk="$2"
-outdir="$(pwd)/logs/$filename"
+outdir="$3"
 mkdir -p "$outdir"
 
 # STATIC MANIFEST ANALYSIS
