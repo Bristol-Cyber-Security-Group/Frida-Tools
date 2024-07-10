@@ -65,7 +65,24 @@ except:
     sys.exit(1)
 
 # Create log path and initiate timeline.log and csv file
-log_folder = f"{outdir}/TLSintercept"
+log_folder = f"{outdir}/TLSintercept_0"
+
+if Path(log_folder).exists():
+    # add/increment a number to the folder name
+
+    folder_name = "TLSintercept_1"
+    temp_log_folder = f"{outdir}/{folder_name}"
+
+    # increment until we have an unused number
+    while True:
+        if Path(temp_log_folder).exists():
+            folder_number = int(folder_name.split("_")[-1]) + 1
+            folder_name = f"TLSintercept_{folder_number}"
+            temp_log_folder = f"{outdir}/{folder_name}"
+        else:
+            log_folder = temp_log_folder
+            break
+
 os.makedirs(log_folder)
 log_file_name = 'timeline.log'
 log_file = f"{log_folder}/{log_file_name}"
