@@ -1,85 +1,64 @@
-var data = {};
+// the following looks for both the SSL read and writes being used in the application. This will pick up multiple SSL
+// libraries, that are being used
 
-function saveData(byteArray, offset, byteCount, hashCode, direction) {
-  var intArray = byteArrayToIntArray(byteArray, offset, byteCount);
-  if (hashCode in data) {
-    data[hashCode] = data[hashCode].concat(intArray);
-  } else {
-    data[hashCode] = intArray;
-  };
-  send(
-    {
-      TYPE: 'data',
-      DIRECTION: direction,
-      STREAM_ID: hashCode,
-      LENGTH: byteCount,
-    },
-    intArray
-  );
+const write_matches = DebugSymbol.findFunctionsNamed("SSL_write");
+write_matches.forEach((addr, idx) => {
+    const module = Process.findModuleByAddress(addr);
+    const tag = `${module ? module.name : 'unknown'} [${idx}]`;
 
-  send(
-    {
-      TYPE: 'combined-data',
-      DIRECTION: direction,
-      STREAM_ID: hashCode,
-      LENGTH: data[hashCode].length,
-    },
-    data[hashCode]
-  );
-}
 
-function byteArrayToIntArray(array, offset, length) {
-  var result = [];
-  for (var i = offset; i < offset + length; ++i) {
-      result.push(
-          parseInt(
-              ('0' + (array[i] & 0xFF).toString(16)).slice(-2), // binary2hex part
-              16
-          )
-      );
-  }
-  return result;
-}
+    Interceptor.attach(ptr(addr), {
+        onEnter(args) {
+            try {
 
-function processData(byteArray, offset, byteCount, outputStream, direction) {
-  saveData(byteArray, offset, byteCount, outputStream.hashCode(), direction);
-}
+                const len = args[2].toInt32();
+                const buf = args[1];
 
-Java.perform(() => {
+                const key = args[0].toString();
 
-  const ActivityThread = Java.use('android.app.ActivityThread');
-  const processName = ActivityThread.currentProcessName();
+                var data = buf.readByteArray(len);
+                send({
+                    type: 'ssl_pair',
+                    session: key,
+                    direction: "write",
+                }, data);
 
-  if (processName === 'org.thoughtcrime.securesms') {
-    var conscrypt_id = 'org.conscrypt';
-  } else {
-    var conscrypt_id = 'com.android.org.conscrypt';
-  }
+            } catch (e) {
+                console.error(`(write) Error in ${tag}:`, e);
+            }
+        }
+    });
+});
 
-  // Android 8 Conscrypt
-  const FileDescriptorOutputStream = Java.use(conscrypt_id + '.ConscryptFileDescriptorSocket$SSLOutputStream');
-  FileDescriptorOutputStream.write.overload('[B', 'int', 'int').implementation = function(byteArray, offset, byteCount) {
-    processData(byteArray, offset, byteCount, this, 'sent');
-    this.write(byteArray, offset, byteCount);
-  }
-  const FileDescriptorInputStream = Java.use(conscrypt_id + '.ConscryptFileDescriptorSocket$SSLInputStream');
-  FileDescriptorInputStream.read.overload('[B', 'int', 'int').implementation = function(byteArray, offset, byteCount) {
-    var ret = this.read(byteArray, offset, byteCount);
-    processData(byteArray, offset, byteCount, this, 'received');
-    return ret;
-  }
+const read_matches = DebugSymbol.findFunctionsNamed("SSL_read");
+read_matches.forEach((addr, idx) => {
+    const module = Process.findModuleByAddress(addr);
+    const tag = `${module ? module.name : 'unknown'} [${idx}]`;
 
-  // Android 12 Conscrypt
-  const EngineSocketOutputStream = Java.use(conscrypt_id + '.ConscryptEngineSocket$SSLOutputStream');
-  EngineSocketOutputStream.write.overload('[B', 'int', 'int').implementation = function(byteArray, offset, byteCount) {
-    processData(byteArray, offset, byteCount, this, 'sent');
-    this.write(byteArray, offset, byteCount);
-  }
-  const EngineSocketInputStream = Java.use(conscrypt_id + '.ConscryptEngineSocket$SSLInputStream');
-  EngineSocketInputStream.read.overload('[B', 'int', 'int').implementation = function(byteArray, offset, byteCount) {
-    var ret = this.read(byteArray, offset, byteCount);
-    processData(byteArray, offset, byteCount, this, 'received');
-    return ret;
-  }
 
+    Interceptor.attach(ptr(addr), {
+        onEnter(args) {
+            this.key = args[0].toString();
+            this.buf = args[1];
+            this.num = args[2].toInt32();
+
+        },
+        onLeave(retval) {
+            try {
+
+                const len = retval.toInt32();
+                if (len <= 0 || len > this.num) return;
+
+                const data = this.buf.readByteArray(len);
+                send({
+                    type: 'ssl_pair',
+                    session: this.key,
+                    direction: "read",
+                }, data);
+
+            } catch (e) {
+                console.error(`(read) Error in ${tag}:`, e);
+            }
+        }
+    });
 });
