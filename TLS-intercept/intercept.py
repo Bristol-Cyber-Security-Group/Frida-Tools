@@ -4,10 +4,10 @@ import signal
 import frida
 import time
 import sys
-import csv
 import os
 
 from process_data import process_data
+from csv import writer
 
 # Parse args
 try:
@@ -26,9 +26,9 @@ ssl_csv_filename = f"{timestamp}_{PROCESS_NAME}_ssl.csv"
 def create_csv(process_name: str, out_dir: str, headers: list[str]):
     file_name = f"{out_dir}/{process_name}.csv"
     csvfile = open(file_name, "w")
-    writer = csv.writer(csvfile)
-    writer.writerow(headers)
-    return csvfile, writer
+    csv_write = writer(csvfile)
+    csv_write.writerow(headers)
+    return csvfile, csv_write
 
 ssl_csv_headers = ["session", "time", "direction", "type", "data"]
 ssl_csv, ssl_csv_writer = create_csv(ssl_csv_filename, outdir, ssl_csv_headers)
