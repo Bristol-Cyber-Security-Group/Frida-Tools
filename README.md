@@ -5,7 +5,7 @@
 This repository contains various Frida scripts to perform static and dynamic privacy analysis on Android applications to produce summary files.
 
 ### NPM (new)
-With the changes in Frida 17, we are now compiling the Frida javascript code using the built-in compiled in the Python API.
+With the changes in Frida 17, we are now compiling the Frida javascript code using the built-in compiler in the Python API.
 This allows us to include the Java bridge in the code executed.
 Previously this was bundled globally in Frida and this step was not needed.
 
@@ -53,7 +53,7 @@ If you don't, the code will generate the required files in the folder the code w
 
 ### Requirements:
 - Emulator is running with Frida server started as setup above.
-- Android platform tools and build tools are in PATH (the commands `aapt` and `adb` are required).
+- Android platform tools and build tools are in PATH (the commands `apt` and `adb` are required).
 - This repository provides a requirements.txt for installing requirements via pip, but the recommended dependency management system is Poetry. Run `poetry install` in the root repository to install dependencies, then `poetry shell` to activate the environment.
 
 ### Running all tools:
