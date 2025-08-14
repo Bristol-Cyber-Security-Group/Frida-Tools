@@ -1,5 +1,6 @@
 import datetime
 import pathlib
+import signal
 import frida
 import time
 import sys
@@ -112,21 +113,18 @@ script.load()
 if is_spawn:
     device.resume(pid)
 
-# TODO - wait for SIGINT
-time.sleep(10)
+def handle_close_signal(signum, frame):
+    global running
+    print("Closing interceptor")
+    running = False
+# set up listeners to listen for kill signals
+signal.signal(signal.SIGINT, handle_close_signal)
+signal.signal(signal.SIGTERM, handle_close_signal)
+# here we loop while we wait for the kill signal of the caller, running will be controller by handle_close_signal
+print("Press Ctrl+C to exit ...")
+while running:
+    time.sleep(1)
 
-# TODO - remove this in favour of the log streaming to file
-#  stream to a separate csv for each intercept
-for key, val in messages.items():
-    print("="*100)
-    print(key, "n elements: ", len(val))
-    for ii in val:
-        print("=" * 20)
-        print(ii['time'], ii['payload'])
-        if ii.get('data') is not None:
-            print(ii['data'])
-        else:
-            print(ii['processed_data'])
 
 java_ssl_csv.close()
 ssl_csv.close()
