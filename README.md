@@ -4,6 +4,22 @@
 
 This repository contains various Frida scripts to perform static and dynamic privacy analysis on Android applications to produce summary files.
 
+### NPM (new)
+With the changes in Frida 17, we are now compiling the Frida javascript code using the built-in compiled in the Python API.
+This allows us to include the Java bridge in the code executed.
+Previously this was bundled globally in Frida and this step was not needed.
+
+This means there are now some node.js related files in the project folder.
+Including the `node_modules` that will be created on first run of a Frida Script.
+
+To share this across the tools that use frida, make sure to run the scripts from the root of this repo.
+For example:
+```shell
+python TLS-intercept/intercept.py
+```
+So that the code takes the shared `packges.json` and `node_modules` etc.
+If you don't, the code will generate the required files in the folder the code was executed from.
+
 
 ## Setup
 
@@ -50,8 +66,8 @@ Example usage: `./test-privacy.sh com.bose.bosemusic ../apkfiles/BoseMusic_8.0.5
 ### TLS intercept:
 One of the most noteworthy scripts from the suite is the `TLS-intercept` tool. This hooks into the Android `conscrypt` function to intercept TLS messages being sent and received by the application in real time. 
 
-Usage: `python intercept.py <package-name> <out-dir>`
+Usage: `python TLS-intercept/intercept.py <package-name> <out-dir>`
 
-Example usage: `python intercept.py com.bose.bosemusic ./logs/bose`
+Example usage: `python TLS-intercept/intercept.py com.bose.bosemusic ./logs/bose`
 
 Output: The tool runs for 10 seconds by default (can be switched to terminate by user input by uncommenting relevant code in `intercept.py`) and produces `messages.csv`, which contains all intercepted messages in the format [MESSAGE_ID, TIMESTAMP, MESSAGE]. Users can then query the database to find messages of interest, for example those containing sensitive information.
