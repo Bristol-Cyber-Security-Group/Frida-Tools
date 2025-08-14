@@ -8,7 +8,7 @@ write_matches.forEach((addr, idx) => {
     const module = Process.findModuleByAddress(addr);
     const tag = `${module ? module.name : 'unknown'} [${idx}]`;
 
-    console.log(`Attaching to SSL_write in ${tag} at ${addr}`);
+    // console.log(`Attaching to SSL_write in ${tag} at ${addr}`);
 
     Interceptor.attach(ptr(addr), {
         onEnter(args) {
@@ -40,7 +40,7 @@ read_matches.forEach((addr, idx) => {
     const module = Process.findModuleByAddress(addr);
     const tag = `${module ? module.name : 'unknown'} [${idx}]`;
 
-    console.log(`Attaching to SSL_read in ${tag} at ${addr}`);
+    // console.log(`Attaching to SSL_read in ${tag} at ${addr}`);
 
     Interceptor.attach(ptr(addr), {
         onEnter(args) {
@@ -48,7 +48,7 @@ read_matches.forEach((addr, idx) => {
             this.buf = args[1];
             this.num = args[2].toInt32();
 
-            console.log("(read) len:", this.num, "key:", this.key, "buf:", this.buf);
+            // console.log("(read) len:", this.num, "key:", this.key, "buf:", this.buf);
 
         },
         onLeave(retval) {
