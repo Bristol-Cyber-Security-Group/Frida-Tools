@@ -3,6 +3,7 @@ import pathlib
 import frida
 import time
 import sys
+import csv
 import os
 
 from process_data import process_data
@@ -15,9 +16,29 @@ except:
     print("Usage: 'python intercept.py <packagename> <outdir>'")
     sys.exit(1)
 
+# set up constant for this script run
+timestamp = datetime.datetime.now().isoformat()
+java_ssl_csv_filename = f"{timestamp}_{PROCESS_NAME}_java_ssl.csv"
+ssl_csv_filename = f"{timestamp}_{PROCESS_NAME}_ssl.csv"
+
+# create a csv file with headers ready to be written into, return the handle to be used elsewhere
+def create_csv(process_name: str, out_dir: str, headers: list[str]):
+    file_name = f"{out_dir}/{process_name}.csv"
+    csvfile = open(file_name, "w")
+    writer = csv.writer(csvfile)
+    writer.writerow(headers)
+    return csvfile, writer
+
+ssl_csv_headers = ["session", "time", "direction", "type", "data"]
+ssl_csv, ssl_csv_writer = create_csv(ssl_csv_filename, outdir, ssl_csv_headers)
+java_ssl_csv_headers = ["stream_id", "time", "direction", "type", "length", "data"]
+java_ssl_csv, java_ssl_csv_writer = create_csv(java_ssl_csv_filename, outdir, java_ssl_csv_headers)
+
+
 ids = {'message_id': 1}
 messages = {}
 def on_message(message, data):
+    time = datetime.datetime.now().isoformat()
     if message['type'] == 'send':
         # determine which TLS intercept this was, either low level or Java based
         payload = message['payload']
@@ -25,30 +46,13 @@ def on_message(message, data):
             # TODO process this data
             info, processed_data = process_data(data)
             if processed_data:
-                # timestamp = datetime.datetime.now().isoformat()
-                # record = [ids['message_id'], timestamp, str(processed_data)]
-                # with open(csv_path, 'a', newline='') as file:
-                #     writer = csv.writer(file)
-                #     writer.writerow(record)
-
                 ids['message_id'] += 1
 
-            # TODO - write to csv
-            # write_log(str({**payload, **info}))
+            # write message to csv
+            java_ssl_csv_writer.writerow([payload["STREAM_ID"], time, payload['DIRECTION'], payload['TYPE'], payload['LENGTH'], processed_data])
 
-            # TODO - temp processing
-            time = datetime.datetime.now().isoformat()
-            if messages.get(payload['STREAM_ID']) is None:
-                messages[payload['STREAM_ID']] = [{'time': time, 'payload': payload, 'processed_data': processed_data}]
-            else:
-                messages[payload['STREAM_ID']].append({'time': time, 'payload': payload, 'processed_data': processed_data})
         else:
-            # TODO - write to csv
-            time = datetime.datetime.now().isoformat()
-            if messages.get(payload['session']) is None:
-                messages[payload['session']] = [{'time': time, 'payload': payload, 'data': data}]
-            else:
-                messages[payload['session']].append({'time': time, 'payload': payload, 'data': data})
+            ssl_csv_writer.writerow([payload['session'], time, payload['direction'], payload['type'], data])
 
 # This frida script will compile the javascript file with node.js to include
 # the Frida Java bridge. This will create a 'node_modules' in the Frida-Tools
@@ -111,6 +115,8 @@ if is_spawn:
 # TODO - wait for SIGINT
 time.sleep(10)
 
+# TODO - remove this in favour of the log streaming to file
+#  stream to a separate csv for each intercept
 for key, val in messages.items():
     print("="*100)
     print(key, "n elements: ", len(val))
@@ -121,6 +127,9 @@ for key, val in messages.items():
             print(ii['data'])
         else:
             print(ii['processed_data'])
+
+java_ssl_csv.close()
+ssl_csv.close()
 
 print(f"Intercepted {ids['message_id'] - 1} messages, exiting.")
 sys.exit(0)
