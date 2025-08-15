@@ -19,7 +19,7 @@ write_matches.forEach((addr, idx) => {
 
                 const key = args[0].toString();
 
-                console.log("(write) len:", len, "key:", key, "buf:", buf);
+                // console.log("(write) len:", len, "key:", key, "buf:", buf);
 
                 var data = buf.readByteArray(len);
                 send({
