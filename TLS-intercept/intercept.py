@@ -1,60 +1,13 @@
-"""
-python intercept.py <process> <outdir>
-
-Example usage:
-python intercept.py signal ./logs/signal
-python intercept.py telegram ./logs/telegram
-"""
-
-import os
-import time, datetime
-import sys
-from pathlib import Path
-import csv
+import datetime
+import pathlib
+import signal
 import frida
+import time
+import sys
+import os
 
 from process_data import process_data
-
-# Create csv file for storing intercepted messages
-def create_csv_file(file_path):
-    headers = ["MESSAGE_ID", "TIMESTAMP", "MESSAGE"]
-    if not Path(file_path).exists():
-        with open(file_path, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(headers)
-    else:
-        print("Messages csv already exists at this location, exiting.")
-        sys.exit(1)
-
-def write_log(message, time=None):
-    if not time:
-        time = datetime.datetime.now().isoformat()
-    with open(log_file, 'a') as file:
-        file.write('-' * 120 + '\n' + time + '\n' + message + '\n')
-
-
-ids = {'message_id': 1}
-
-def on_message(message, data):
-    if message['type'] == 'send':
-        payload = message['payload']
-        if payload['TYPE'] == 'data':
-            info, processed_data = process_data(data)
-            if processed_data:
-                timestamp = datetime.datetime.now().isoformat()
-                record = [ids['message_id'], timestamp, str(processed_data)]
-                with open(csv_path, 'a', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow(record)
-
-                ids['message_id'] += 1
-            
-            write_log(str({**payload, **info}))
-
-    elif message['type'] == 'error':
-        write_log(message['stack'])
-    else:
-        write_log(str(message))
+from csv import writer
 
 # Parse args
 try:
@@ -64,56 +17,117 @@ except:
     print("Usage: 'python intercept.py <packagename> <outdir>'")
     sys.exit(1)
 
-# Create log path and initiate timeline.log and csv file
-log_folder = f"{outdir}/TLSintercept_0"
+# set up constant for this script run
+timestamp = datetime.datetime.now().isoformat()
+java_ssl_csv_filename = f"{timestamp}_{PROCESS_NAME}_java_ssl.csv"
+ssl_csv_filename = f"{timestamp}_{PROCESS_NAME}_ssl.csv"
 
-if Path(log_folder).exists():
-    # add/increment a number to the folder name
+# create a csv file with headers ready to be written into, return the handle to be used elsewhere
+def create_csv(process_name: str, out_dir: str, headers: list[str]):
+    file_name = f"{out_dir}/{process_name}.csv"
+    csvfile = open(file_name, "w")
+    csv_write = writer(csvfile)
+    csv_write.writerow(headers)
+    return csvfile, csv_write
 
-    folder_name = "TLSintercept_1"
-    temp_log_folder = f"{outdir}/{folder_name}"
+ssl_csv_headers = ["session", "time", "direction", "type", "data"]
+ssl_csv, ssl_csv_writer = create_csv(ssl_csv_filename, outdir, ssl_csv_headers)
+java_ssl_csv_headers = ["stream_id", "time", "direction", "type", "length", "data"]
+java_ssl_csv, java_ssl_csv_writer = create_csv(java_ssl_csv_filename, outdir, java_ssl_csv_headers)
 
-    # increment until we have an unused number
-    while True:
-        if Path(temp_log_folder).exists():
-            folder_number = int(folder_name.split("_")[-1]) + 1
-            folder_name = f"TLSintercept_{folder_number}"
-            temp_log_folder = f"{outdir}/{folder_name}"
+
+ids = {'message_id': 1}
+messages = {}
+def on_message(message, data):
+    time = datetime.datetime.now().isoformat()
+    if message['type'] == 'send':
+        # determine which TLS intercept this was, either low level or Java based
+        payload = message['payload']
+        if payload.get("TYPE") is not None:
+            # TODO process this data
+            info, processed_data = process_data(data)
+            if processed_data:
+                ids['message_id'] += 1
+
+            # write message to csv
+            java_ssl_csv_writer.writerow([payload["STREAM_ID"], time, payload['DIRECTION'], payload['TYPE'], payload['LENGTH'], processed_data])
+
         else:
-            log_folder = temp_log_folder
-            break
+            ssl_csv_writer.writerow([payload['session'], time, payload['direction'], payload['type'], data])
 
-os.makedirs(log_folder)
-log_file_name = 'timeline.log'
-log_file = f"{log_folder}/{log_file_name}"
-with open(log_file, 'w') as file:
-    file.write(f'{PROCESS_NAME}, \n')
-csv_path = f"{log_folder}/messages.csv"
-create_csv_file(csv_path)
+# This frida script will compile the javascript file with node.js to include
+# the Frida Java bridge. This will create a 'node_modules' in the Frida-Tools
+# folder, in addition to other npm files such as the packages.json will be
+# created.
 
-# Connect to process with Frida and start js script
+PROJECT_ROOT = pathlib.Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+ENTRYPOINT   = PROJECT_ROOT / "script.js"
+
+# create the package manager and install the Java bridge
+pm = frida.PackageManager()
+pm.on("install-progress", lambda phase, fraction, details: print({"phase": phase, "fraction": fraction, "details": details}))
+pm.install(specs=["frida-java-bridge"])
+
+
+# add a hook to print out diagnostics from the compilation stage to show any errors
+diag_logging = []
+def on_diag(diag):
+    diag_logging.append(f"compiler log: {diag}")
+
+# compile with the diagnostics hook
+compiler = frida.Compiler()
+compiler.on("diagnostics", on_diag)
+try:
+    bundle = compiler.build(str(ENTRYPOINT), project_root=str(PROJECT_ROOT))
+except Exception as e:
+    #
+    if diag_logging:
+        for ii in diag_logging:
+            print(ii)
+    print(e)
+    sys.exit(1)
+
+# we will now attach to the process on the device, or start the process
 device = frida.get_usb_device()
-pid = device.spawn([PROCESS_NAME])
-session = device.attach(pid)
-script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'script.js')
-with open(script_path) as f:
-    script = session.create_script(f.read())
 
+processes = device.enumerate_processes()
+running = next((p for p in processes if p.name.lower() == PROCESS_NAME.lower()), None)
+
+is_spawn = False
+if running:
+    # the application is running, we will just attach
+    pid = running.pid
+    session = device.attach(pid)
+    # TODO - if app has crashed or is frozen but is in background with a pid, spawn instead
+else:
+    # the application is not running, we will spawn it
+    # TODO - we need the full identifier
+    pid = device.spawn(PROCESS_NAME)
+    session = device.attach(pid)
+    is_spawn = True
+
+# now attach the script we built into the running process
+script = session.create_script(bundle)
 script.on('message', on_message)
-
 script.load()
-device.resume(pid)
+if is_spawn:
+    device.resume(pid)
 
-# UNCOMMENT THIS IF YOU WANT USER INPUT TO EXIT SCRIPT
-# print("Script loaded, press any key to exit:")
+def handle_close_signal(signum, frame):
+    global running
+    print("Closing interceptor")
+    running = False
+# set up listeners to listen for kill signals
+signal.signal(signal.SIGINT, handle_close_signal)
+signal.signal(signal.SIGTERM, handle_close_signal)
+# here we loop while we wait for the kill signal of the caller, running will be controller by handle_close_signal
+print("Press Ctrl+C to exit ...")
+while running:
+    time.sleep(1)
 
-# try:
-#     input()
-# except KeyboardInterrupt:
-#     pass
-# print('Exiting...')
 
-# Prevent script from terminating immediately
-time.sleep(20)
+java_ssl_csv.close()
+ssl_csv.close()
+
 print(f"Intercepted {ids['message_id'] - 1} messages, exiting.")
 sys.exit(0)
