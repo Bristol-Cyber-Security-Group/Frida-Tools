@@ -122,6 +122,7 @@ signal.signal(signal.SIGINT, handle_close_signal)
 signal.signal(signal.SIGTERM, handle_close_signal)
 # here we loop while we wait for the kill signal of the caller, running will be controller by handle_close_signal
 print("Press Ctrl+C to exit ...")
+running = True
 while running:
     time.sleep(1)
 
