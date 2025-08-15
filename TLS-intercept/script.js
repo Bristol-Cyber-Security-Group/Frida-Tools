@@ -133,19 +133,21 @@ Java.perform(() => {
     //     }
     // });
 
-    // TODO - different conscrypt namespace if signal - is this still the case?
-    // const ActivityThread = Java.use('android.app.ActivityThread');
-    // const processName = ActivityThread.currentProcessName();
-    //
-    // if (processName === 'org.thoughtcrime.securesms') {
-    //     var conscrypt_id = 'org.conscrypt';
-    // } else {
-    //     var conscrypt_id = 'com.android.org.conscrypt';
-    // }
 
-    // TODO - handle the change of namespace from old to new android versions of conscrypt so we can use this on old apps
-    //  ConscryptFileDescriptorSocket vs. ConscryptEngineSocket
+    // Android 8 Conscrypt
+    const FileDescriptorOutputStream = Java.use('com.android.org.conscrypt.ConscryptFileDescriptorSocket$SSLOutputStream');
+    FileDescriptorOutputStream.write.overload('[B', 'int', 'int').implementation = function (byteArray, offset, byteCount) {
+        processData(byteArray, offset, byteCount, this, 'sent');
+        this.write(byteArray, offset, byteCount);
+    }
+    const FileDescriptorInputStream = Java.use('com.android.org.conscrypt.ConscryptFileDescriptorSocket$SSLInputStream');
+    FileDescriptorInputStream.read.overload('[B', 'int', 'int').implementation = function (byteArray, offset, byteCount) {
+        var ret = this.read(byteArray, offset, byteCount);
+        processData(byteArray, offset, byteCount, this, 'received');
+        return ret;
+    }
 
+    // Android 12 Conscrypt
     const EngineSocketOutputStream = Java.use('org.conscrypt.ConscryptEngineSocket$SSLOutputStream');
     EngineSocketOutputStream.write.overload('[B', 'int', 'int').implementation = function (byteArray, offset, byteCount) {
         this.write(byteArray, offset, byteCount);
